@@ -1,0 +1,956 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChurnAI - AI Customer Retention</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #070913;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.6);
+            --secondary: #8b5cf6;
+            --secondary-glow: rgba(139, 92, 246, 0.6);
+            --accent: #06b6d4;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Glow Background */
+        .ambient-background {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2;
+            overflow: hidden;
+            pointer-events: none;
+            background: linear-gradient(to bottom, #070913, #0a0f25);
+        }
+        
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.5;
+            animation: moveBlob 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .blob-1 { background: var(--primary); width: 600px; height: 600px; top: -20%; left: -10%; }
+        .blob-2 { background: var(--secondary); width: 800px; height: 800px; bottom: -20%; right: -20%; animation-duration: 25s; }
+        .blob-3 { background: var(--accent); width: 500px; height: 500px; top: 40%; left: 30%; animation-duration: 30s; opacity: 0.3; }
+
+        @keyframes moveBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(100px, 150px) scale(1.1); }
+            100% { transform: translate(-100px, -50px) scale(0.9); }
+        }
+
+        /* Glassmorphism Utilities */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0; width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            background: rgba(7, 9, 19, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 5%;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .logo i {
+            color: var(--primary);
+            text-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0; height: 2px;
+            bottom: -5px; left: 0;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white !important;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.25);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+            z-index: -1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 150px 5% 100px 5%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-content {
+            opacity: 0;
+            animation: fadeUp 1s forwards cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50px;
+            color: #60a5fa;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 68px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(270deg, var(--primary), var(--secondary), var(--accent));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 5s ease infinite;
+        }
+
+        .hero p {
+            font-size: 19px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 40px;
+            max-width: 90%;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Hero Visual / Particles */
+        .hero-visual {
+            position: relative;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            animation: fadeLeft 1s forwards 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .ai-core {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            z-index: 2;
+        }
+
+        .core-circle {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px solid var(--glass-border);
+        }
+
+        .c1 { width: 100%; height: 100%; animation: spin 20s linear infinite; border-top-color: var(--primary); }
+        .c2 { width: 75%; height: 75%; animation: spin 15s linear infinite reverse; border-right-color: var(--secondary); background: rgba(255,255,255,0.02); backdrop-filter: blur(5px); }
+        .c3 { width: 50%; height: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); box-shadow: 0 0 50px var(--primary-glow); animation: pulse 3s infinite alternate; }
+
+        .floating-card {
+            position: absolute;
+            background: rgba(10, 15, 30, 0.8);
+            border: 1px solid var(--glass-border);
+            padding: 15px 20px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: float 6s infinite alternate ease-in-out;
+        }
+
+        .fc-1 { top: 10%; right: -10%; animation-delay: 0s; }
+        .fc-2 { bottom: 10%; left: -10%; animation-delay: -3s; }
+        .fc-3 { bottom: 30%; right: -20%; animation-delay: -1.5s; }
+
+        .fc-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+        }
+        
+        /* Section Globals */
+        section {
+            padding: 120px 5%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 70px auto;
+        }
+
+        .section-header h2 {
+            font-size: 42px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-header p {
+            font-size: 18px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Features Section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            border-radius: 24px;
+            padding: 40px 30px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 60px; height: 60px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 25px;
+            border: 1px solid rgba(59,130,246,0.2);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover .feature-icon {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-card h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            background: rgba(0,0,0,0.2);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .steps-container::after {
+            content: '';
+            position: absolute;
+            top: 40px; left: 10%; width: 80%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+            z-index: 1;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            padding: 0 20px;
+        }
+
+        .step-num {
+            width: 80px; height: 80px;
+            background: var(--bg-dark);
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            margin: 0 auto 24px auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: 800;
+            color: white;
+            box-shadow: 0 0 20px var(--primary-glow);
+            position: relative;
+        }
+        
+        .step-num i {
+            position: absolute;
+            font-size: 30px;
+            opacity: 0.1;
+        }
+
+        .step h4 { font-size: 20px; margin-bottom: 10px; }
+        .step p { color: var(--text-muted); font-size: 15px; }
+
+
+        /* Live Preview Dashboard Section */
+        .dashboard-preview {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .dp-glass {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+        }
+
+        .dp-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .dp-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .dp-stat-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .dp-stat-title { color: var(--text-muted); font-size: 14px; margin-bottom: 10px; font-weight: 500; }
+        .dp-stat-value { font-size: 32px; font-weight: 800; color: white; display: flex; align-items: center; gap: 10px; }
+        .dp-trend.up { color: #10b981; font-size: 14px; }
+        .dp-trend.down { color: #ef4444; font-size: 14px; }
+
+        .dp-charts {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .dp-chart-wrapper {
+            background: rgba(255,255,255,0.01);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .canvas-holder {
+            position: relative;
+            height: 220px;
+            width: 100%;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border-radius: 40px;
+            padding: 80px 5%;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto 100px auto;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .cta-section h2 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .cta-section p {
+            font-size: 20px;
+            color: #cbd5e1;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto; margin-right: auto;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--glass-border);
+            padding: 60px 5% 30px 5%;
+            background: #04060d;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 50px;
+        }
+
+        .footer-brand p {
+            color: var(--text-muted);
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .footer-links h4 {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .footer-links ul { list-style: none; }
+        .footer-links li { margin-bottom: 12px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
+        .footer-links a:hover { color: var(--primary); }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid var(--glass-border);
+            color: #64748b;
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeLeft {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes spin {
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.8; }
+            100% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-15px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .hero-container { grid-template-columns: 1fr; text-align: center; }
+            .hero-content { margin: 0 auto; }
+            .hero p { margin: 0 auto 40px auto; }
+            .hero-buttons { justify-content: center; }
+            .hero-visual { display: none; }
+            .steps-container { flex-direction: column; gap: 50px; }
+            .steps-container::after { display: none; }
+            .dp-charts { grid-template-columns: 1fr; }
+            .footer-content { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero h1 { font-size: 48px; }
+            .dp-stats { grid-template-columns: 1fr; }
+            .cta-section h2 { font-size: 36px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Background -->
+    <div class="ambient-background">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav id="navbar">
+        <a href="#" class="logo">
+            <i class="fa-solid fa-wave-square"></i> ChurnHub
+        </a>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#dashboard">Dashboard</a>
+            <a href="{% url 'login' %}">Login</a>
+        </div>
+        <a href="{% url 'login' %}" class="btn btn-primary">Get Started</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="badge"><i class="fa-solid fa-sparkles"></i> AI-Powered Analytics v2.0</div>
+                <h1>Advanced AI for <span>Customer Churn</span> Prediction</h1>
+                <p>Predict customer behavior, identify at-risk accounts instantly inside a secure SaaS environment, and reduce overall churn using our state-of-the-art EEP Deep Learning algorithm.</p>
+                <div class="hero-buttons">
+                    <a href="{% url 'prediction' %}" class="btn btn-primary btn-lg" style="padding: 16px 36px; font-size: 16px;">
+                        Start Prediction <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                    <a href="{% url 'UserHome' %}" class="btn btn-secondary btn-lg" style="padding: 16px 36px; font-size: 16px;">
+                        <i class="fa-solid fa-chart-line"></i> View Dashboard
+                    </a>
+                </div>
+            </div>
+            
+            <div class="hero-visual">
+                <div class="ai-core">
+                    <div class="core-circle c1"></div>
+                    <div class="core-circle c2"></div>
+                    <div class="core-circle c3"></div>
+                    
+                    <div class="floating-card glass fc-1">
+                        <div class="fc-icon"><i class="fa-solid fa-shield-check"></i></div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Risk Status</div>
+                            <div style="font-weight: 700; color: #10b981;">98% Safe</div>
+                        </div>
+                    </div>
+                    
+                    <div class="floating-card glass fc-2">
+                        <div class="fc-icon"><i class="fa-solid fa-user-minus"></i></div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Detected Churn</div>
+                            <div style="font-weight: 700; color: #ef4444;">High Risk</div>
+                        </div>
+                    </div>
+
+                    <div class="floating-card glass fc-3">
+                        <div class="fc-icon" style="color: #f59e0b;"><i class="fa-solid fa-bolt"></i></div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Processing</div>
+                            <div style="font-weight: 700;">Live Stream View</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+        <div class="section-header">
+            <h2>Intelligent Features for Modern Business</h2>
+            <p>Everything you need to analyze, predict, and prevent customer churn all inside one powerful platform.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card glass">
+                <div class="feature-icon"><i class="fa-solid fa-brain"></i></div>
+                <h3>Predict Churn</h3>
+                <p>Run complex AI-based predictions with deep neural networks to exactly pinpoint which customer will drop off and why.</p>
+            </div>
+            <div class="feature-card glass">
+                <div class="feature-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                <h3>Analytics Dashboard</h3>
+                <p>Rich, interactive visual charts and deep insights mapped against user demography to simplify business decisions.</p>
+            </div>
+            <div class="feature-card glass">
+                <div class="feature-icon"><i class="fa-solid fa-radar"></i></div>
+                <h3>Real-time Detection</h3>
+                <p>Instantly fetch churn probability for any client record on the fly with sub-second prediction speeds.</p>
+            </div>
+            <div class="feature-card glass">
+                <div class="feature-icon"><i class="fa-solid fa-lock"></i></div>
+                <h3>Secure System</h3>
+                <p>Role-based authentication, admin dashboards, and safe system architecture keep your raw data encrypted and secure.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="section-header">
+            <h2>How It Works</h2>
+            <p>Four simple steps to predict behavioral drop-offs effortlessly.</p>
+        </div>
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-num">1<i class="fa-solid fa-user-plus"></i></div>
+                <h4>Enter Customer Details</h4>
+                <p>Input dynamic profile factors safely.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">2<i class="fa-solid fa-list-check"></i></div>
+                <h4>Select Plan & Services</h4>
+                <p>Pick active telecom or platform subscriptions.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">3<i class="fa-solid fa-microchip"></i></div>
+                <h4>Run Prediction</h4>
+                <p>Wait while the Deep AI analyzes the risks.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">4<i class="fa-solid fa-chart-column"></i></div>
+                <h4>View Churn Risk</h4>
+                <p>Generate explainable AI visual insights.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Preview Section -->
+    <section id="dashboard">
+        <div class="section-header">
+            <h2>Live Production Dashboard Preview</h2>
+            <p>Get a glance at how your executive summary looks from the inside.</p>
+        </div>
+        
+        <div class="dashboard-preview">
+            <div class="dp-glass">
+                <div class="dp-header">
+                    <h3 style="font-size: 22px; font-weight: 600;"><i class="fa-solid fa-chart-network" style="color:var(--primary); margin-right: 10px;"></i> Overview Statistics</h3>
+                    <div style="font-size: 14px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px;">Live Dynamic Feed</div>
+                </div>
+                
+                <div class="dp-stats">
+                    <div class="dp-stat-card">
+                        <div class="dp-stat-title">Total Processed Users</div>
+                        <div class="dp-stat-value">12,450 <span class="dp-trend up"><i class="fa-solid fa-up-long"></i> 12%</span></div>
+                    </div>
+                    <div class="dp-stat-card">
+                        <div class="dp-stat-title">Current Churn Rate</div>
+                        <div class="dp-stat-value" style="color: #ef4444;">18.4% <span class="dp-trend down"><i class="fa-solid fa-down-long"></i> 2.1%</span></div>
+                    </div>
+                    <div class="dp-stat-card">
+                        <div class="dp-stat-title">Active Loyal Users</div>
+                        <div class="dp-stat-value" style="color: #10b981;">10,159 <span class="dp-trend up"><i class="fa-solid fa-up-long"></i> 5%</span></div>
+                    </div>
+                </div>
+
+                <div class="dp-charts">
+                    <div class="dp-chart-wrapper">
+                        <h4 style="margin-bottom: 20px; font-weight: 500; color: #cbd5e1;">Monthly Churn Trends</h4>
+                        <div class="canvas-holder">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="dp-chart-wrapper">
+                        <h4 style="margin-bottom: 20px; font-weight: 500; color: #cbd5e1;">Overall Status</h4>
+                        <div class="canvas-holder">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section style="padding-top: 50px;">
+        <div class="cta-section glass">
+            <h2>Start Predicting Customer Churn Today</h2>
+            <p>Elevate your retention strategy using our advanced AI-powered SaaS engine and boost overall customer lifetime value.</p>
+            <a href="{% url 'login' %}" class="btn btn-primary" style="padding: 18px 40px; font-size: 18px;">
+                Get Started Now <i class="fa-solid fa-rocket" style="margin-left: 8px;"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="logo">
+                    <i class="fa-solid fa-wave-square"></i> ChurnHub
+                </div>
+                <p>Enterprise AI solution dedicated to predicting accurate customer behavior using highly optimized Ensembled Deep Learning frameworks.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Platform</h4>
+                <ul>
+                    <li><a href="{% url 'prediction' %}">Run Prediction</a></li>
+                    <li><a href="{% url 'UserHome' %}">Analytics</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#dashboard">Live View</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Access</h4>
+                <ul>
+                    <li><a href="{% url 'login' %}">Customer Login</a></li>
+                    <li><a href="{% url 'login' %}">Admin Portal</a></li>
+                    <li><a href="{% url 'login' %}">Create Account</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Churn Prediction Research SaaS Project. All Code By Author.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Initialize Chart.js
+        document.addEventListener('DOMContentLoaded', function() {
+            // Global defaults for dark theme
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = 'Outfit';
+
+            // Bar Chart
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Churned Users',
+                        data: [65, 59, 80, 81, 56, 55],
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderRadius: 6
+                    }, {
+                        label: 'Retained',
+                        data: [280, 290, 240, 250, 310, 320],
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // Pie Chart
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Risk / Churn', 'Safe / Retained'],
+                    datasets: [{
+                        data: [18.4, 81.6],
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(16, 185, 129, 0.8)'
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

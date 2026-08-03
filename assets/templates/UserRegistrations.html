@@ -1,0 +1,407 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Churn Prediction</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset & Setup */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Animated Gradient Background */
+        body {
+            background: linear-gradient(-45deg, #1e3c72, #2a5298, #00c6ff, #0072ff);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Particle Container */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1; /* Behind the login card */
+        }
+
+        /* Glassmorphism Reg Card */
+        .login-wrapper {
+            position: relative;
+            z-index: 10; /* Above particles */
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            color: #fff;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        /* Typography & Form Elements */
+        .glass-card h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .glass-card p.subtitle {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 30px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            text-align: left;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: rgba(255,255,255,0.9);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input::placeholder, .input-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #00c6ff;
+            box-shadow: 0 0 12px rgba(0, 198, 255, 0.4);
+        }
+
+        /* Fix for Django form generated fields */
+        .input-group input, .input-group select {
+            color: white; /* but dropdown options will be unreadable on some OSes if we don't fix option color */
+        }
+        
+        .input-group select option {
+            color: #333;
+            background: #fff;
+        }
+
+        .btn-submit {
+            grid-column: 1 / -1;
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);
+        }
+
+        .btn-submit:hover {
+            box-shadow: 0 6px 20px rgba(0, 114, 255, 0.6);
+            transform: scale(1.02);
+        }
+        
+        .btn-reset {
+            grid-column: 1 / -1;
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .links {
+            margin-top: 25px;
+            font-size: 14px;
+            grid-column: 1 / -1;
+        }
+
+        .links a {
+            color: #00c6ff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .links a:hover {
+            color: #fff;
+            text-shadow: 0 0 8px rgba(0, 198, 255, 0.8);
+        }
+
+        .messages {
+            grid-column: 1 / -1;
+            margin-bottom: 20px;
+            color: #00c6ff;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 10px;
+            background: rgba(0, 198, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 198, 255, 0.3);
+        }
+        
+        /* Back to home */
+        .back-home {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            z-index: 20;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 16px;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .back-home:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Back to Home Link -->
+    <a href="{% url 'index' %}" class="back-home">
+        &#8592; Back to Home
+    </a>
+
+    <!-- Particles Background -->
+    <div id="particles-js"></div>
+
+    <!-- Registration Card -->
+    <div class="login-wrapper">
+        <div class="glass-card">
+            <h2>Create an Account</h2>
+            <p class="subtitle">Join us to start predicting and analyzing churn</p>
+
+            <form action="{% url 'UserRegisterActions' %}" method="POST" class="form-grid">
+                {% csrf_token %}
+                
+                {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="input-group">
+                    <label for="id_name">Full Name</label>
+                    {{ form.name }}
+                </div>
+                
+                <div class="input-group">
+                    <label for="id_loginid">Login ID</label>
+                    {{ form.loginid }}
+                </div>
+
+                <div class="input-group">
+                    <label for="id_email">Email Address</label>
+                    {{ form.email }}
+                </div>
+
+                <div class="input-group">
+                    <label for="id_mobile">Mobile Number</label>
+                    {{ form.mobile }}
+                </div>
+
+                <div class="input-group">
+                    <label for="id_password">Password</label>
+                    {{ form.password }}
+                </div>
+
+                <div class="input-group">
+                    <label for="id_locality">Locality</label>
+                    {{ form.locality }}
+                </div>
+
+                <div class="input-group">
+                    <label for="id_city">City</label>
+                    {{ form.city }}
+                </div>
+
+                <div class="input-group">
+                    <label for="id_state">State</label>
+                    {{ form.state }}
+                </div>
+
+                <div class="input-group" style="grid-column: 1 / -1;">
+                    <label for="id_status">Status</label>
+                    {{ form.status }}
+                </div>
+
+                <div class="input-group" style="grid-column: 1 / -1;">
+                    <label for="id_address">Address</label>
+                    {{ form.address }}
+                </div>
+
+                <button type="submit" class="btn-submit">Register Account</button>
+                <button type="reset" class="btn-reset">Reset Fields</button>
+
+                <div class="links">
+                    <p>Already have an account? <a href="{% url 'UserLogin' %}">Sign in here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Particles.js Library -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // Apply classes to django forms fields immediately
+        document.querySelectorAll('input, select, textarea').forEach(function(el) {
+            el.classList.add('form-control');
+        });
+
+        // Particles.js Configuration
+        particlesJS("particles-js", {
+            "particles": {
+                "number": {
+                    "value": 80,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": {
+                    "value": "#ffffff"
+                },
+                "shape": {
+                    "type": "circle",
+                },
+                "opacity": {
+                    "value": 0.5,
+                    "random": true,
+                    "anim": {
+                        "enable": true,
+                    }
+                },
+                "size": {
+                    "value": 4,
+                    "random": true,
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#ffffff",
+                    "opacity": 0.3,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 2,
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "grab"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                },
+                "modes": {
+                    "grab": {
+                        "distance": 140,
+                        "line_linked": {
+                            "opacity": 1
+                        }
+                    },
+                    "push": {
+                        "particles_nb": 4
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+    </script>
+</body>
+</html>

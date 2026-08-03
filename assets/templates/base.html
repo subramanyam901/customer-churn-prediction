@@ -1,0 +1,444 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="copyright" content="xAI, https://x.ai/">
+    <meta name="description" content="Predict customer churn with precision using machine learning. Retain at-risk customers in the telecom industry with our advanced tools.">
+    <meta name="keywords" content="customer churn, churn prediction, machine learning, telecom, xAI">
+    <meta name="author" content="xAI">
+    <title>Customer Churn Prediction</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+
+    <!-- Bootstrap and External CSS -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" media="screen">
+    <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/animate.css' %}" media="screen">
+    <link rel="stylesheet" href="{% static 'css/owl.theme.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/owl.carousel.css' %}" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Alegreya+Sans:100,300,400,700' rel='stylesheet'>
+
+    <!-- Custom CSS -->
+    <style>
+        /* General Styling */
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+            min-height: 100vh;
+            padding-top: 60px;
+            padding-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navbar Styling */
+        .navbar-wrapper {
+            background: rgba(10, 25, 47, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            padding: 0.5rem 1rem;
+            margin: 1rem 2rem;
+            position: sticky;
+            top: 10px;
+            z-index: 1000;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-brand h2 {
+            color: #e0f2fe;
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.6rem;
+            font-family: 'Alegreya Sans', sans-serif;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .navbar-brand img {
+            width: 35px;
+            margin-right: 8px;
+            transition: transform 0.5s ease;
+        }
+        .navbar-brand:hover img {
+            transform: rotate(360deg);
+        }
+        .navbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .nav-item {
+            position: relative;
+            animation: slideIn 0.5s ease forwards;
+            opacity: 0;
+        }
+        .nav-item:nth-child(1) { animation-delay: 0.1s; }
+        .nav-item:nth-child(2) { animation-delay: 0.2s; }
+        .nav-item:nth-child(3) { animation-delay: 0.3s; }
+        .nav-item:nth-child(4) { animation-delay: 0.4s; }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .nav > li > a {
+            color: #e0f2fe !important;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 8px 12px !important;
+            transition: all 0.3s ease;
+            font-family: 'Open Sans', sans-serif;
+            border-radius: 5px;
+            text-shadow: 0 0 5px rgba(147, 197, 253, 0.3);
+        }
+        .nav > li > a:hover {
+            color: #93c5fd !important;
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(147, 197, 253, 0.5);
+        }
+        .nav > li > a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background: #93c5fd;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        .nav > li > a:hover::after {
+            width: 80%;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #2563eb, #93c5fd);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            animation: pulseButton 1.5s infinite;
+        }
+        @keyframes pulseButton {
+            0% { box-shadow: 0 0 0 0 rgba(147, 197, 253, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(147, 197, 253, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(147, 197, 253, 0); }
+        }
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #1e40af, #2563eb);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(147, 197, 253, 0.7);
+            animation: none;
+        }
+        .navbar-toggle {
+            border: none;
+            background: transparent;
+            position: relative;
+            width: 30px;
+            height: 20px;
+        }
+        .navbar-toggle .icon-bar {
+            background: #e0f2fe;
+            transition: all 0.3s ease;
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            border-radius: 2px;
+        }
+        .navbar-toggle .icon-bar:nth-child(1) { top: 0; }
+        .navbar-toggle .icon-bar:nth-child(2) { top: 8px; }
+        .navbar-toggle .icon-bar:nth-child(3) { top: 16px; }
+        .navbar-toggle.collapsed .icon-bar:nth-child(1) { transform: rotate(0); top: 0; }
+        .navbar-toggle.collapsed .icon-bar:nth-child(2) { opacity: 1; }
+        .navbar-toggle.collapsed .icon-bar:nth-child(3) { transform: rotate(0); top: 16px; }
+        .navbar-toggle:not(.collapsed) .icon-bar:nth-child(1) { transform: rotate(45deg); top: 8px; }
+        .navbar-toggle:not(.collapsed) .icon-bar:nth-child(2) { opacity: 0; }
+        .navbar-toggle:not(.collapsed) .icon-bar:nth-child(3) { transform: rotate(-45deg); top: 8px; }
+        .navbar-toggle:hover .icon-bar {
+            background: #93c5fd;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            color: #fff;
+            text-align: center;
+            padding: 150px 20px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-section h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-family: 'Alegreya Sans', sans-serif;
+        }
+        .hero-section p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 20px auto 40px auto;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 50px 20px;
+        }
+        .feature-box {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+        .feature-box:hover {
+            transform: translateY(-5px);
+        }
+        .feature-box i {
+            font-size: 2.5rem;
+            color: #2563eb;
+            margin-bottom: 15px;
+        }
+        .feature-box h3 {
+            font-family: 'Alegreya Sans', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        /* Content Section */
+        .content-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+            color: #333;
+        }
+
+        /* Footer Styling */
+        .footer {
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 1rem 0;
+            color: #ccc;
+            margin-top: auto;
+            text-align: center;
+        }
+        .footer a {
+            color: #93c5fd;
+            margin: 0 10px;
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+        .footer a:hover {
+            color: #fff;
+        }
+        .scrollToTop {
+            color: white;
+            font-size: 2rem;
+            transition: color 0.3s ease;
+        }
+        .scrollToTop:hover {
+            color: #93c5fd;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar-wrapper {
+                margin: 0.5rem;
+                border-radius: 8px;
+            }
+            .navbar-brand h2 {
+                font-size: 1.4rem;
+            }
+            .navbar-nav {
+                flex-direction: column;
+                background: rgba(10, 25, 47, 0.9);
+                border-radius: 8px;
+                padding: 1rem;
+                margin-top: 0.5rem;
+            }
+            .nav > li > a {
+                margin: 5px 0;
+                text-align: center;
+                padding: 10px !important;
+            }
+            .btn-primary {
+                margin: 10px auto;
+                display: block;
+            }
+            .hero-section {
+                padding: 100px 20px;
+            }
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            .hero-section p {
+                font-size: 1rem;
+            }
+            .content-container {
+                margin: 20px;
+                padding: 20px;
+            }
+            .feature-box {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body data-spy="scroll" data-target="#navbar-scroll">
+<div class="overlay">
+
+    <!-- Navbar -->
+    <div id="menu">
+        <nav class="navbar-wrapper navbar-default" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbarSupport"
+                            aria-controls="navbarSupport" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand site-name" href="/">
+                       
+                        <h2>Churn Prediction</h2>
+                    </a>
+                </div>
+
+                <div id="navbar-scroll" class="collapse navbar-collapse navbar-right" id="navbarSupport">
+                    <ul class="nav navbar-nav">
+                        <li class="nav-item {% block home_page %}{% endblock %}">
+                            <a class="nav-link" href="{% url 'index' %}">Home</a>
+                        </li>
+                        <li class="nav-item {% block user_login %}{% endblock %}">
+                            <a class="nav-link" href="{% url 'UserLogin' %}">User Login</a>
+                        </li>
+                        <li class="nav-item {% block admin_login %}{% endblock %}">
+                            <a class="nav-link" href="{% url 'AdminLogin' %}">Admin Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary ml-lg-3" href="{% url 'UserRegister' %}">Register</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Hero Section -->
+    {% block hero %}
+    {% if request.path == '/' %}
+    <section class="hero-section">
+        <div class="container">
+            <h1>Predict Customer Churn with Precision</h1>
+            <p>Harness the power of machine learning to identify and retain at-risk customers in the telecom industry.</p>
+            <a href="{% url 'prediction' %}" class="btn btn-primary">Get Started</a>
+        </div>
+    </section>
+    {% endif %}
+    {% endblock %}
+
+    <!-- Features Section (Optional for Homepage) -->
+    {% if request.path == '/' %}
+    <section class="features-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-4 feature-box">
+                    <i class="fa fa-line-chart"></i>
+                    <h3>Accurate Predictions</h3>
+                    <p>Our model uses advanced machine learning to deliver precise churn predictions.</p>
+                </div>
+                <div class="col-md-4 feature-box">
+                    <i class="fa fa-users"></i>
+                    <h3>Retain Customers</h3>
+                    <p>Identify at-risk customers early and take proactive steps to retain them.</p>
+                </div>
+                <div class="col-md-4 feature-box">
+                    <i class="fa fa-cogs"></i>
+                    <h3>Easy to Use</h3>
+                    <p>Intuitive interface for both users and admins to train and predict churn.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="content-container">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container text-center">
+            <p>© 2025 xAI. All rights reserved.</p>
+            <div>
+                <a href="https://x.ai" target="_blank" aria-label="Visit xAI Website"><i class="fa fa-globe"></i></a>
+                <a href="mailto:support@x.ai" aria-label="Email Support"><i class="fa fa-envelope"></i></a>
+                <a href="https://twitter.com/xAI" target="_blank" aria-label="Follow xAI on Twitter"><i class="fa fa-twitter"></i></a>
+            </div>
+            <a href="#" class="scrollToTop"><i class="fa fa-arrow-circle-o-up"></i></a>
+        </div>
+    </footer>
+</div>
+
+<!-- Scripts -->
+<script src="{% static 'js/jquery-3.5.1.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/wow.min.js' %}"></script>
+<script src="{% static 'js/owl.carousel.min.js' %}"></script>
+<script>
+    // Initialize WOW.js for animations
+    new WOW().init();
+
+    // Scroll to Top functionality
+    $(window).scroll(function() {
+        if ($(this).scrollTop() > 100) {
+            $('.scrollToTop').fadeIn();
+        } else {
+            $('.scrollToTop').fadeOut();
+        }
+    });
+    $('.scrollToTop').click(function() {
+        $('html, body').animate({scrollTop: 0}, 800);
+        return false;
+    });
+
+    // Ensure navbar toggle animations work
+    $('.navbar-toggle').on('click', function() {
+        $(this).toggleClass('collapsed');
+    });
+</script>
+</body>
+</html>

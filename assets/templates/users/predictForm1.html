@@ -1,0 +1,866 @@
+{% extends 'users/UserHome.html' %}
+{% block content %}
+<style>
+    :root {
+        --glass: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.3);
+        --shadow-lg: 0 20px 40px rgba(0,0,0,0.1);
+        --jio: #0056b3;
+        --airtel: #e31e24;
+        --vi: #ffcc00;
+        --bsnl: #ff6600;
+    }
+    
+    .predict-container { animation: fadeIn 0.8s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .predict-card { 
+        background: var(--glass); 
+        backdrop-filter: blur(12px); 
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 30px; 
+        padding: 40px; 
+        box-shadow: var(--shadow-lg); 
+        border: 1px solid var(--glass-border); 
+        transition: all 0.3s ease;
+    }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin-top: 30px; }
+    .input-grp { display: flex; flex-direction: column; gap: 8px; position: relative; }
+    .input-grp label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+    .input-grp select, .input-grp input { 
+        border: 2px solid #f0f4f9; 
+        background: white; 
+        padding: 14px 18px; 
+        border-radius: 16px; 
+        font-size: 14px; 
+        color: #1e293b; 
+        outline: none; 
+        transition: all 0.2s;
+    }
+    .input-grp select:focus, .input-grp input:focus { 
+        border-color: var(--accent); 
+        box-shadow: 0 0 15px rgba(67, 24, 255, 0.15);
+        transform: translateY(-2px);
+    }
+    .input-grp input:read-only { background: #f8fafc; border-color: #e2e8f0; color: #64748b; cursor: not-allowed; }
+
+    .section-title { 
+        grid-column: 1 / -1; 
+        margin: 30px 0 10px 0; 
+        padding-bottom: 12px; 
+        font-weight: 800; 
+        font-size: 20px; 
+        color: var(--text-main); 
+        display: flex; 
+        align-items: center; 
+        gap: 12px;
+        border-bottom: 2px solid #f0f4f9;
+    }
+
+    /* Smart Detector Section */
+    .smart-detector { grid-column: 1 / -1; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border-radius: 20px; padding: 25px; color: white; display: flex; align-items: center; gap: 25px; margin-bottom: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .smart-detector input { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); color: white; border-radius: 12px; padding: 12px 20px; width: 300px; outline: none; font-size: 18px; letter-spacing: 2px; font-weight: 700; transition: border 0.3s; }
+    .smart-detector input:focus { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.15); }
+    .smart-detector input::placeholder { color: rgba(255,255,255,0.4); letter-spacing: normal; }
+    
+    .provider-badge { padding: 8px 18px; border-radius: 50px; font-weight: 900; font-size: 13px; text-transform: uppercase; background: white; color: #1e293b; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); animation: scaleIn 0.3s ease; }
+    @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    /* Plan Cards */
+    .plans-container { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 10px; display: none; }
+    .plan-card { 
+        background: white; border: 2px solid #f0f4f9; border-radius: 20px; padding: 25px 20px 20px; cursor: pointer; transition: all 0.3s;
+        text-align: center; position: relative; overflow: hidden;
+    }
+    .plan-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.06); }
+    .plan-card.active { border-color: var(--accent); background: #fefeff; }
+    .plan-card.active::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 15px; right: 15px; color: var(--accent); font-size: 20px; }
+    
+    .plan-badge { position: absolute; top: 10px; left: 10px; padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 8px; text-transform: uppercase;}
+    .badge-basic { background: #fef2f2; color: #ef4444; border: 1px solid #ef4444; }
+    .badge-standard { background: #fffbeb; color: #f59e0b; border: 1px solid #f59e0b; }
+    .badge-premium { background: #f0fdf4; color: #22c55e; border: 1px solid #22c55e; }
+
+    .plan-card h4 { font-weight: 800; color: #1e293b; margin-bottom: 5px; font-size: 18px; margin-top: 10px; }
+    .plan-card p { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+    .plan-card .price { font-size: 28px; font-weight: 900; color: var(--text-main); margin: 15px 0; }
+    .plan-card .price span { font-size: 14px; opacity: 0.6; }
+
+    /* Calculation Banner */
+    .calc-banner { grid-column: 1 / -1; background: #f1f5f9; border-radius: 16px; padding: 20px; display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-weight: 700; border: 1px dashed #cbd5e1; }
+    .calc-text { font-size: 16px; color: var(--text-main); }
+    .calc-total { font-size: 22px; color: var(--accent); font-weight: 900; }
+
+    /* Result UI */
+    .result-section { grid-column: 1 / -1; margin-bottom: 40px; display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px; }
+    .main-res-card { 
+        background: white; border-radius: 24px; padding: 30px; text-align: center; border: 1px solid #f0f4f9;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .prob-circle { 
+        width: 120px; height: 120px; border-radius: 50%; border: 8px solid #f0f4f9; display: flex; align-items: center; 
+        justify-content: center; font-size: 28px; font-weight: 900; color: var(--text-main); margin-bottom: 15px;
+        position: relative;
+    }
+    .risk-badge { padding: 5px 15px; border-radius: 50px; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; }
+    .risk-high { background: #fef2f2; color: #ef4444; border: 1px solid #ef4444; }
+    .risk-medium { background: #fffbeb; color: #f59e0b; border: 1px solid #f59e0b; }
+    .risk-low { background: #f0fdf4; color: #22c55e; border: 1px solid #22c55e; }
+
+    .btn-predict { 
+        grid-column: 1 / -1; background: var(--accent); color: white; border: none; padding: 20px; 
+        border-radius: 20px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 40px; 
+        display: flex; align-items: center; justify-content: center; gap: 12px; 
+        box-shadow: 0 10px 25px rgba(67, 24, 255, 0.4); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative; overflow: hidden;
+    }
+    .btn-predict::after {
+        content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transform: skewX(-20deg); transition: 0.5s;
+    }
+    .btn-predict:hover::after { left: 120%; }
+    .btn-predict:hover { transform: translateY(-5px); box-shadow: 0 0 40px rgba(67, 24, 255, 0.8), 0 15px 35px rgba(67, 24, 255, 0.4); filter: brightness(1.1); }
+
+    .impact-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; text-transform: uppercase; }
+    .impact-high { background: #fef2f2; color: #ef4444; border: 1px solid #ef4444; }
+    .impact-medium { background: #fff7ed; color: #f97316; border: 1px solid #f97316; }
+    .impact-low { background: #f0fdf4; color: #22c55e; border: 1px solid #22c55e; }
+
+    .gauge-wrapper { position: relative; width: 160px; height: 80px; overflow: hidden; margin: 0 auto 15px; display: flex; justify-content: center; }
+    .gauge { width: 160px; height: 160px; border-radius: 50%; position: absolute; top: 0; box-sizing: border-box; border: 16px solid #e2e8f0; border-bottom-color: transparent !important; border-right-color: transparent !important; transform: rotate(-45deg); transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+    .gauge-value { position: absolute; bottom: 0; font-size: 32px; font-weight: 900; color: var(--text-main); line-height: 1; }
+    
+    .auto-summary { border: 2px solid var(--accent); background: #f8fafc; border-radius: 16px; padding: 25px; margin-top: 20px; text-align: left; transition: all 0.3s; position: relative; overflow: hidden; display: none; }
+    .auto-summary::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent); }
+    .live-risk-value { font-size: 36px; font-weight: 900; color: #0f172a; margin-top: 5px; }
+
+    .smart-alert { border-left: 4px solid #f59e0b; background: #fffbeb; padding: 15px; margin-top: 10px; border-radius: 8px; display: none; margin-bottom: 20px; animation: fadeIn 0.4s ease-out;}
+    .smart-alert ul { margin: 5px 0 0 20px; color: #b45309; font-weight: 600; font-size: 13px; }
+
+    #loading-overlay { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); 
+        backdrop-filter: blur(5px); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column;
+    }
+    .spinner { width: 64px; height: 64px; border: 6px solid #f1f5f9; border-top: 6px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .report-btn {
+        background: linear-gradient(135deg, #00c6ff, #0072ff);
+        color: white;
+        padding: 8px 18px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-weight: 500;
+        float: right;
+    }
+</style>
+
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <h3 style="margin-top: 25px; color: var(--accent); font-weight: 900;">Processing EEP Inference...</h3>
+    <p style="color: var(--text-muted); font-weight: 600;">Analyzing ensemble weights & customer behavior</p>
+</div>
+
+<div class="predict-container">
+    <div class="predict-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div>
+                <h2 style="font-weight: 900; font-size: 30px; color: var(--text-main);">Churn Intelligence AI</h2>
+                <p style="color: var(--text-muted); margin-top: 5px; font-weight: 600;">Simplified smart input for high-precision retention analysis.</p>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                {% if request.user.is_staff %} <a href="/admin-report/" class="report-btn">📄 Generate Report</a>
+                {% endif %}
+                <button type="button" onclick="fillSample('churn')" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 2px solid rgba(239, 68, 68, 0.2); padding: 10px 20px; border-radius: 14px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s;"><i class="fa fa-bolt"></i> High Churn Case</button>
+                <button type="button" onclick="fillSample('safe')" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 2px solid rgba(34, 197, 94, 0.2); padding: 10px 20px; border-radius: 14px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.3s;"><i class="fa fa-shield-halved"></i> Loyal Case</button>
+            </div>
+        </div>
+
+        {% if output %}
+        <div class="result-section" id="resultBlock" style="grid-template-columns: 1fr 2fr;">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="main-res-card" style="box-shadow: 0 15px 35px rgba(0,0,0,0.06); padding: 40px 30px;">
+                    <div class="risk-badge risk-{{ risk_level|lower }}" style="font-size: 14px; padding: 8px 20px;">{{ risk_level }} Risk Customer</div>
+                    <div class="gauge-wrapper" style="width: 180px; height: 90px; margin-bottom: 15px;">
+                        <div class="gauge" style="width: 180px; height: 180px; border-width: 16px; border-bottom-color: transparent !important; border-right-color: transparent !important; border-top-color: {% if risk_level == 'High' %}#ef4444{% elif risk_level == 'Medium' %}#f59e0b{% else %}#22c55e{% endif %} !important; border-left-color: {% if risk_level == 'High' %}#ef4444{% elif risk_level == 'Medium' %}#f59e0b{% else %}#22c55e{% endif %} !important; transform: rotate(calc(-45deg + (180deg * {{ probability }} / 100)));"></div>
+                        <div class="gauge-value" id="currentRiskProb">{{ probability }}%</div>
+                    </div>
+                    <div style="font-weight: 800; font-size: 15px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Risk Score (out of 100)</div>
+                    <h3 style="font-weight: 900; font-size: 26px; color: var(--text-main); margin-top: 15px;">{{ output }}</h3>
+                </div>
+                
+                <div style="background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0;">
+                    <h4 style="font-weight: 900; font-size: 16px; margin-bottom: 12px; color: #475569;"><i class="fa-solid fa-chart-line"></i> Top Influencing Factors</h4>
+                    <ul style="padding-left: 20px; font-weight: 600; color: #334155; font-size: 14px;">
+                        {% for t in top_influencers %}
+                            <li style="margin-bottom: 6px;">{{ t|title }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="xai-container" style="display: flex; flex-direction: column; gap: 15px;">
+                
+                <div id="compareBanner" style="display: none; background: linear-gradient(135deg, #1e293b, #334155); color: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+                    <h4 style="font-weight: 900; font-size: 16px; margin-bottom: 10px;"><i class="fa-solid fa-code-compare"></i> Live Delta Analysis: Plan Upgrade</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-weight: 700; font-size: 18px; color: rgba(255,255,255,0.7);">Current: <span style="color: white;">{{ probability }}%</span></div>
+                        <div><i class="fa-solid fa-arrow-right-long" style="color: #cbd5e1; font-size: 24px;"></i></div>
+                        <div style="font-weight: 700; font-size: 18px; color: rgba(255,255,255,0.7);">Estimated New Risk: <span id="newRiskValue" style="color: #22c55e; font-weight: 900; font-size: 24px;">--%</span></div>
+                    </div>
+                </div>
+
+                <div style="background: #eff6ff; border-left: 6px solid #3b82f6; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.1);">
+                    <h5 style="font-weight: 900; color: #1e3a8a; font-size: 16px;"><i class="fa-solid fa-lightbulb" style="color: #3b82f6;"></i> AI Retention Suggestions</h5>
+                    <ul style="margin-top: 12px; font-size: 14px; color: #1e40af; font-weight: 600; line-height: 1.6;">
+                    {% for s in suggestions %}<li>{{ s }}</li>{% endfor %}
+                    </ul>
+                </div>
+
+                <div style="background: #fef2f2; border-left: 6px solid #ef4444; padding: 20px; border-radius: 12px;">
+                    <h5 style="font-weight: 800; color: #991b1b;"><i class="fa fa-triangle-exclamation"></i> Churn Risk Factors</h5>
+                    <ul style="margin-top: 10px; font-size: 14px; color: #991b1b;">
+                    {% for f in risk_factors %}<li>{{ f }}</li>{% endfor %}
+                    </ul>
+                </div>
+                <div style="background: #f0fdf4; border-left: 6px solid #22c55e; padding: 20px; border-radius: 12px;">
+                    <h5 style="font-weight: 800; color: #166534;"><i class="fa fa-circle-check"></i> Safety Indicators</h5>
+                    <ul style="margin-top: 10px; font-size: 14px; color: #166534;">
+                    {% for f in safe_factors %}<li>{{ f }}</li>{% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="grid-column: 1 / -1; display: flex; justify-content: center; margin-top: 15px;">
+                <a href="{% url 'generate_report' %}?type=prediction" class="btn-predict" style="text-decoration: none; width: auto; padding: 15px 40px; margin-top: 0; background: linear-gradient(135deg, #1e293b, #334155);"><i class="fa-solid fa-file-pdf" style="color: #ef4444;"></i> Download Prediction Report</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <form class="form-grid" id="predictForm" action="{% url 'prediction' %}" method="post">
+            {% csrf_token %}
+            
+            <div class="smart-detector" style="flex-direction: column; align-items: stretch; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 25px;">
+                    <div style="font-size: 32px;"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                    <div>
+                        <h4 style="font-weight: 900; margin-bottom: 5px;">Smart Provider Detection</h4>
+                        <p style="font-size: 13px; opacity: 0.8; margin-bottom: 10px;">Enter your number & confirm your provider to auto-load plans.</p>
+                            <input type="text" id="phoneInput" name="phone_number" placeholder="Enter Contact Number..." maxlength="10" autocomplete="off" required>
+                    </div>
+                </div>
+                
+                <div id="providerConfirmation" style="display: none; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; margin-top: 5px; border: 1px dashed rgba(255,255,255,0.3);">
+                    <div style="margin-bottom: 12px; font-size: 14px; color: #fbbf24; font-weight: 600;">
+                        <i class="fa-solid fa-circle-exclamation"></i> <span id="detectedText">Detected: Airtel (Please confirm, numbers may be ported)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <label style="font-weight: bold; font-size: 14px; color: white;">Confirm Your Provider:</label>
+                        <select id="providerSelect" name="provider_network" style="background: white; border: 2px solid white; padding: 8px 15px; border-radius: 8px; color: #1e293b; font-weight: 700; outline: none; cursor: pointer; min-width: 150px; font-family: 'Outfit', sans-serif;">
+                            <option value="">-- Select --</option>
+                            <option value="Jio">Jio</option>
+                            <option value="Airtel">Airtel</option>
+                            <option value="VI">VI</option>
+                            <option value="BSNL">BSNL</option>
+                        </select>
+                        <div id="providerBadge" class="provider-badge" style="display: none; margin-left: auto;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="plans-container" id="plansContainer">
+                <div class="section-title" style="grid-column: 1 / -1; border: none; font-size: 14px; opacity: 0.8; margin-top: 10px;">Select Your previous Subscription Plan:</div>
+                
+                <!-- Jio Plans -->
+                <div class="plan-card jio-plan" data-price="299" data-internet="Fiber optic" data-contract="Month-to-month">
+                    <span class="plan-badge badge-basic">Basic</span>
+                    <h4>Jio ₹299</h4>
+                    <p>1.5GB/Day + Basic Apps</p>
+                    <div class="price"><span>₹</span>299</div>
+                </div>
+                <div class="plan-card jio-plan" data-price="349" data-internet="Fiber optic" data-contract="Month-to-month">
+                    <span class="plan-badge badge-basic">Basic</span>
+                    <h4>Jio ₹349</h4>
+                    <p>2GB/Day</p>
+                    <div class="price"><span>₹</span>349</div>
+                </div>
+                <div class="plan-card jio-plan" data-price="499" data-internet="Fiber optic" data-contract="One year">
+                    <span class="plan-badge badge-standard">Standard</span>
+                    <h4>Jio ₹499</h4>
+                    <p>OTT Included (JioCinema)</p>
+                    <div class="price"><span>₹</span>499</div>
+                </div>
+                <div class="plan-card jio-plan" data-price="599" data-internet="Fiber optic" data-contract="Two year">
+                    <span class="plan-badge badge-premium">Premium</span>
+                    <h4>Jio Premium</h4>
+                    <p>All Features Included</p>
+                    <div class="price"><span>₹</span>599</div>
+                </div>
+
+                <!-- Airtel Plans -->
+                <div class="plan-card airtel-plan" data-price="249" data-internet="DSL" data-contract="Month-to-month">
+                    <span class="plan-badge badge-basic">Basic</span>
+                    <h4>Airtel Basic</h4>
+                    <p>Truly Unlimited + 1GB/Day</p>
+                    <div class="price"><span>₹</span>249</div>
+                </div>
+                <div class="plan-card airtel-plan" data-price="499" data-internet="Fiber optic" data-contract="One year">
+                    <span class="plan-badge badge-standard">Standard</span>
+                    <h4>Airtel OTT Pack</h4>
+                    <p>OTT Included + 2GB/Day</p>
+                    <div class="price"><span>₹</span>499</div>
+                </div>
+                <div class="plan-card airtel-plan" data-price="799" data-internet="Fiber optic" data-contract="Two year">
+                    <span class="plan-badge badge-premium">Premium</span>
+                    <h4>Airtel Premium</h4>
+                    <p>Premium Pack + OTT</p>
+                    <div class="price"><span>₹</span>799</div>
+                </div>
+
+                <!-- VI Plans -->
+                <div class="plan-card vi-plan" data-price="299" data-internet="DSL" data-contract="Month-to-month">
+                    <span class="plan-badge badge-basic">Basic</span>
+                    <h4>VI Hero</h4>
+                    <p>1.5GB/Day + Binge All Night</p>
+                    <div class="price"><span>₹</span>299</div>
+                </div>
+                <div class="plan-card vi-plan" data-price="479" data-internet="DSL" data-contract="One year">
+                    <span class="plan-badge badge-standard">Standard</span>
+                    <h4>VI Standard</h4>
+                    <p>Hotstar + 1.5GB/Day</p>
+                    <div class="price"><span>₹</span>479</div>
+                </div>
+                <div class="plan-card vi-plan" data-price="699" data-internet="Fiber optic" data-contract="Two year">
+                    <span class="plan-badge badge-premium">Premium</span>
+                    <h4>VI Ultra Premium</h4>
+                    <p>Amazon Prime + Cloud Space</p>
+                    <div class="price"><span>₹</span>699</div>
+                </div>
+
+                <!-- BSNL Plans -->
+                <div class="plan-card bsnl-plan" data-price="199" data-internet="DSL" data-contract="Month-to-month">
+                    <span class="plan-badge badge-basic">Basic</span>
+                    <h4>BSNL Basic</h4>
+                    <p>2GB/Day Data</p>
+                    <div class="price"><span>₹</span>199</div>
+                </div>
+                <div class="plan-card bsnl-plan" data-price="399" data-internet="DSL" data-contract="One year">
+                    <span class="plan-badge badge-standard">Standard</span>
+                    <h4>BSNL Standard</h4>
+                    <p>3GB/Day + BSNL Tunes</p>
+                    <div class="price"><span>₹</span>399</div>
+                </div>
+                <div class="plan-card bsnl-plan" data-price="599" data-internet="Fiber optic" data-contract="Two year">
+                    <span class="plan-badge badge-premium">Premium</span>
+                    <h4>BSNL Premium</h4>
+                    <p>Eros Now + High Speed</p>
+                    <div class="price"><span>₹</span>599</div>
+                </div>
+            </div>
+
+            <div class="calc-banner" id="calcBanner" style="display: none;">
+                <div class="calc-text" id="calcText">₹350 × 13 Months</div>
+                <div class="calc-total" id="calcTotal">Total: ₹4550</div>
+            </div>
+
+            <!-- Customer Info -->
+            <div class="section-title"><i class="fa-solid fa-user-gear"></i> Customer Info</div>
+            <div class="input-grp">
+                <label>Gender <span class="impact-badge impact-low">Low Impact</span></label>
+                <select name="gender" id="gender"><option value="Male">Male</option><option value="Female">Female</option></select>
+            </div>
+            <div class="input-grp">
+                <label>Senior Citizen</label>
+                <select name="SeniorCitizen" id="SeniorCitizen"><option value="0">No</option><option value="1">Yes</option></select>
+            </div>
+            <div class="input-grp">
+                <label>Tenure (Months) <span class="impact-badge impact-high">High Impact</span></label>
+                <input type="number" name="tenure" id="tenureInput" min="1" max="100" value="13" required>
+            </div>
+            <div class="input-grp">
+                <label>Contract Type <span class="impact-badge impact-high">High Impact</span></label>
+                <select name="Contract" id="contractSelect">
+                    <option value="Month-to-month">Month-to-month</option>
+                    <option value="One year">One year</option>
+                    <option value="Two year">Two year</option>
+                </select>
+            </div>
+
+            <!-- Service Usage -->
+            <div class="section-title"><i class="fa-solid fa-server"></i> Service Usage</div>
+            <div class="input-grp">
+                <label>Internet Service</label>
+                <select name="InternetService" id="internetServiceSelect">
+                    <option value="Fiber optic">Fiber optic</option>
+                    <option value="DSL">DSL</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+            <div class="input-grp">
+                <label>Online Security</label>
+                <select name="OnlineSecurity" id="OnlineSecurity"><option value="No">No</option><option value="Yes">Yes</option></select>
+            </div>
+            <div class="input-grp">
+                <label>Customer Support <span class="impact-badge impact-medium">Medium Impact</span></label>
+                <select name="TechSupport" id="TechSupport"><option value="No">No</option><option value="Yes">Yes</option></select>
+            </div>
+            <div class="input-grp">
+                <label>Online Backup</label>
+                <select name="OnlineBackup"><option value="No">No</option><option value="Yes">Yes</option></select>
+            </div>
+            <div class="input-grp">
+                <label>Device Protection</label>
+                <select name="DeviceProtection"><option value="No">No</option><option value="Yes">Yes</option></select>
+            </div>
+            <div class="input-grp">
+                <label>Streaming Service</label>
+                <select name="StreamingTV"><option value="No">No</option><option value="Yes">Yes</option></select>
+            </div>
+
+            <!-- Billing & Payments -->
+            <div class="section-title"><i class="fa-solid fa-file-invoice-dollar"></i> Billing & Payments</div>
+            <div class="input-grp">
+                <label>Payment Method</label>
+                <select name="PaymentMethod">
+                    <option value="Electronic check">Electronic Check / UPI</option>
+                    <option value="Credit card (automatic)">Credit Card</option>
+                    <option value="Bank transfer (automatic)">Debit Card</option>
+                    <option value="Mailed check">Cash</option>
+                </select>
+            </div>
+            <div class="input-grp">
+                <label>Paperless Billing</label>
+                <select name="PaperlessBilling"><option value="Yes">Yes</option><option value="No">No</option></select>
+            </div>
+            <div class="input-grp" style="grid-column: 1 / -1; display: flex; flex-direction: row; align-items: center; justify-content: space-between; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <label style="margin: 0; font-size: 14px; text-transform: none;">Calculated Monthly Charges (₹) <span class="impact-badge impact-high">High Impact</span></label>
+                <input type="number" step="0.01" name="MonthlyCharges" id="monthlyCharges" required readonly style="width: 150px; background: white;">
+            </div>
+
+            <!-- Customer Experience -->
+            <div class="section-title"><i class="fa-solid fa-face-smile"></i> Customer Experience</div>
+            <div class="input-grp" style="grid-column: 1;">
+                <label>Satisfaction Rating <span class="impact-badge impact-high">High Impact</span> <br/><span id="satVal" style="color: var(--accent); font-size: 16px;">3</span>/5</label>
+                <input type="range" name="Satisfaction" min="1" max="5" value="3" oninput="document.getElementById('satVal').innerText = this.value" style="margin-top: 10px; cursor: pointer; height: 6px; border-radius: 5px; outline: none;">
+                <div style="font-size: 12px; color: #f59e0b; margin-top: 8px; font-weight: 600;"><i class="fa-solid fa-circle-info"></i> Low satisfaction increases churn risk</div>
+            </div>
+            <div class="input-grp" style="grid-column: 2;">
+                <label>Number of Complaints</label>
+                <input type="number" name="Complaints" min="0" value="0">
+                <div style="font-size: 12px; color: #ef4444; margin-top: 8px; font-weight: 600;"><i class="fa-solid fa-triangle-exclamation"></i> More complaints increase churn risk</div>
+            </div>
+            
+            <input type="hidden" name="TotalCharges" id="totalCharges">
+
+            <div class="smart-alert" id="smartAlertsBox">
+                <div style="display: flex; gap: 10px; align-items: center; font-weight: 800; color: #b45309;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Smart Alerts Triggered Automatically:
+                </div>
+                <ul id="smartAlertsList"></ul>
+            </div>
+
+            <div class="auto-summary" id="autoSummaryBox">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <div style="font-size: 13px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Pre-Execution Summary</div>
+                        <h4 style="font-size: 18px; font-weight: 900; color: #1e293b; margin-top: 8px;" id="summaryPlan">Plan: Not Selected</h4>
+                        <div style="font-size: 14px; color: #64748b; font-weight: 600; margin-top: 5px;">
+                            Contract: <span id="summaryContract">--</span> | Tenure: <span id="summaryTenure">13</span> Mos <br/>
+                            Total Value: ₹<span id="summaryTotal">0</span>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px;">Estimated Live Risk</div>
+                        <div class="live-risk-value" id="summaryRisk">--%</div>
+                        <div id="summaryRiskLabel" style="font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 5px; display: inline-block; margin-top: 5px;">Awaiting Input</div>
+                    </div>
+                </div>
+                <div id="whatIfSimulationText" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1; font-size: 13px; font-weight: 600; color: #475569;">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: #3b82f6;"></i> Tip: Try changing your contract type to see instant risk changes!
+                </div>
+            </div>
+
+            <button type="submit" class="btn-predict"><i class="fa-solid fa-magnifying-glass-chart"></i> Execute Ensemble Prediction</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phoneInput');
+    const providerBadge = document.getElementById('providerBadge');
+    const plansContainer = document.getElementById('plansContainer');
+    const calcBanner = document.getElementById('calcBanner');
+    const calcText = document.getElementById('calcText');
+    const calcTotal = document.getElementById('calcTotal');
+    const form = document.getElementById('predictForm');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const providerConfirmation = document.getElementById('providerConfirmation');
+    const detectedText = document.getElementById('detectedText');
+    const providerSelect = document.getElementById('providerSelect');
+
+    let autoDetectedProvider = "";
+
+    phoneInput.addEventListener('input', function(e) {
+        let val = e.target.value.replace(/\D/g, ''); // Numeric only
+        e.target.value = val;
+        
+        if (val.length >= 1) {
+            const firstDigit = val.charAt(0);
+            autoDetectedProvider = "";
+            
+            // Logic: 9, 8 -> Jio | 7 -> Airtel | 6 -> VI | 5 -> BSNL
+            if (firstDigit === '9' || firstDigit === '8') autoDetectedProvider = "Jio";
+            else if (firstDigit === '7') autoDetectedProvider = "Airtel";
+            else if (firstDigit === '6') autoDetectedProvider = "VI";
+            else if (firstDigit === '5') autoDetectedProvider = "BSNL";
+
+            if (autoDetectedProvider) {
+                providerConfirmation.style.display = "block";
+                detectedText.innerText = `Detected: ${autoDetectedProvider} (Please confirm, numbers may be ported)`;
+                
+                if (!providerSelect.dataset.userChanged) {
+                    providerSelect.value = autoDetectedProvider;
+                    updatePlansAndUI(autoDetectedProvider);
+                }
+            } else {
+                providerConfirmation.style.display = "none";
+                hidePlans();
+            }
+        } else {
+            providerConfirmation.style.display = "none";
+            providerSelect.dataset.userChanged = "";
+            providerSelect.value = "";
+            hidePlans();
+        }
+    });
+
+    providerSelect.addEventListener('change', function() {
+        providerSelect.dataset.userChanged = "true";
+        if (this.value) {
+            updatePlansAndUI(this.value);
+        } else {
+            hidePlans();
+        }
+    });
+
+    function hidePlans() {
+        providerBadge.style.display = "none";
+        plansContainer.style.display = "none";
+        calcBanner.style.display = "none";
+        document.getElementById('monthlyCharges').value = "";
+        document.getElementById('totalCharges').value = "";
+        const autoMsg = document.getElementById('autoDetectMsg');
+        if(autoMsg) autoMsg.style.display = 'none';
+    }
+
+    function updatePlansAndUI(provider) {
+        providerBadge.innerText = provider + " Selected";
+        providerBadge.style.display = "block";
+        providerBadge.style.background = provider === 'Jio' ? '#0056b3' : (provider === 'Airtel' ? '#e31e24' : (provider === 'BSNL' ? '#ff6600' : '#ffcc00'));
+        providerBadge.style.color = (provider === 'VI') ? 'black' : 'white';
+        
+        plansContainer.style.display = "grid";
+        // Show relevant plans only
+        document.querySelectorAll('.plan-card').forEach(p => {
+            p.style.display = p.classList.contains(provider.toLowerCase() + '-plan') ? 'block' : 'none';
+            p.classList.remove('active');
+        });
+        
+        // Reset charges to prompt plan selection
+        calcBanner.style.display = "none";
+        document.getElementById('monthlyCharges').value = "";
+        document.getElementById('totalCharges').value = "";
+        const autoMsg = document.getElementById('autoDetectMsg');
+        if(autoMsg) autoMsg.style.display = 'none';
+        
+        // Reset auto fields
+        const streamField = document.querySelector('select[name="StreamingTV"]');
+        const backupField = document.querySelector('select[name="OnlineBackup"]');
+        const securityField = document.querySelector('select[name="OnlineSecurity"]');
+        [streamField, backupField, securityField].forEach(f => {
+            f.style.background = 'white';
+            f.style.borderColor = '#f0f4f9';
+            f.style.pointerEvents = 'auto';
+        });
+    }
+
+    // Live Risk Simulation State
+    let liveRiskDebounceTimer;
+
+    function assessSmartAlerts() {
+        const alerts = [];
+        const tenure = parseInt(document.getElementById('tenureInput').value) || 0;
+        const contract = document.getElementById('contractSelect').value;
+        const techSupport = document.getElementById('TechSupport').value;
+
+        if (tenure < 12) alerts.push("Low tenure indicates fragile loyalty. High immediate churn risk.");
+        if (contract === 'Month-to-month') alerts.push("Month-to-month contracts lack long-term retention lock-in.");
+        if (techSupport === 'No') alerts.push("Without customer support features, clients facing issues are likelier to churn.");
+        
+        const satScore = parseInt(document.querySelector('input[name="Satisfaction"]').value);
+        if (satScore <= 2) alerts.push("Very low satisfaction rating detected. Escalated flight risk.");
+
+        const alertBox = document.getElementById('smartAlertsBox');
+        const alertList = document.getElementById('smartAlertsList');
+        if (alerts.length > 0 && providerSelect.value) {
+            alertList.innerHTML = alerts.map(a => `<li>${a}</li>`).join('');
+            alertBox.style.display = 'block';
+        } else {
+            alertBox.style.display = 'none';
+        }
+    }
+
+    function triggerLiveSimulation() {
+        if (!providerSelect.value || !document.getElementById('monthlyCharges').value) return;
+        
+        document.getElementById('autoSummaryBox').style.display = 'block';
+        document.getElementById('summaryPlan').innerText = "Plan: " + providerSelect.value + " ₹" + document.getElementById('monthlyCharges').value;
+        document.getElementById('summaryContract').innerText = document.getElementById('contractSelect').value;
+        document.getElementById('summaryTenure').innerText = document.getElementById('tenureInput').value;
+        document.getElementById('summaryTotal').innerText = document.getElementById('totalCharges').value;
+        
+        assessSmartAlerts();
+
+        clearTimeout(liveRiskDebounceTimer);
+        liveRiskDebounceTimer = setTimeout(() => {
+            document.getElementById('summaryRisk').innerText = "CALC...";
+            
+            const formData = new FormData(document.getElementById('predictForm'));
+            const jsonData = Object.fromEntries(formData.entries());
+            
+            fetch('{% url "live_prediction" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(jsonData)
+            }).then(res => res.json())
+            .then(data => {
+                if (data.probability) {
+                    const r = parseFloat(data.probability);
+                    document.getElementById('summaryRisk').innerText = r + "%";
+                    
+                    const label = document.getElementById('summaryRiskLabel');
+                    if(r > 70) {
+                        label.innerText = 'HIGH RISK';
+                        label.style.background = '#fef2f2'; label.style.color = '#ef4444';
+                        document.getElementById('whatIfSimulationText').innerHTML = '<i class="fa-solid fa-arrow-trend-down" style="color: #ef4444;"></i> Risk is elevated. Consider switching to a 1 or 2-year contract or adding features.';
+                    } else if (r > 40) {
+                        label.innerText = 'MEDIUM RISK';
+                        label.style.background = '#fffbeb'; label.style.color = '#f59e0b';
+                        document.getElementById('whatIfSimulationText').innerHTML = '<i class="fa-solid fa-arrow-trend-down" style="color: #f59e0b;"></i> Customer is vulnerable. Enhancing tech support or satisfaction improves odds.';
+                    } else {
+                        label.innerText = 'LOW RISK / SAFE';
+                        label.style.background = '#f0fdf4'; label.style.color = '#22c55e';
+                        document.getElementById('whatIfSimulationText').innerHTML = '<i class="fa-solid fa-shield-check" style="color: #22c55e;"></i> Customer profile is stable and secure.';
+                    }
+                }
+            });
+        }, 400); // 400ms debounce
+    }
+
+    form.addEventListener('input', function(e) {
+        if(e.target.id === 'tenureInput' && document.getElementById('monthlyCharges').value) {
+            const price = parseFloat(document.getElementById('monthlyCharges').value);
+            const t_val = parseInt(document.getElementById('tenureInput').value) || 1;
+            const total = price * t_val;
+            document.getElementById('totalCharges').value = total.toFixed(2);
+            document.getElementById('calcText').innerText = "₹" + price + " × " + t_val + " Months";
+            document.getElementById('calcTotal').innerText = "Total: ₹" + total.toFixed(0);
+        }
+        triggerLiveSimulation();
+    });
+    form.addEventListener('change', triggerLiveSimulation);
+
+    // Plan Interaction & Auto Calculation
+    document.querySelectorAll('.plan-card').forEach(card => {
+        card.addEventListener('click', function() {
+            document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            
+            const price = parseFloat(this.dataset.price);
+            const t_months = parseInt(document.getElementById('tenureInput').value) || 13;
+            const total = price * t_months;
+            
+            // Fill Fields
+            document.getElementById('monthlyCharges').value = price;
+            document.getElementById('totalCharges').value = total.toFixed(2);
+            document.getElementById('internetServiceSelect').value = this.dataset.internet;
+            document.getElementById('contractSelect').value = this.dataset.contract;
+            
+            // Auto fill features dynamically based on strictly governed plan mapping
+            const currentProvider = document.getElementById('providerSelect').value;
+            const planKey = currentProvider + "_" + price;
+            
+            const telecomPlans = {
+                "Jio_299": { streaming: "No", backup: "Yes", security: "No" },
+                "Jio_349": { streaming: "No", backup: "Yes", security: "Yes" },
+                "Jio_499": { streaming: "Yes", backup: "Yes", security: "Yes" },
+                "Jio_599": { streaming: "Yes", backup: "Yes", security: "Yes" },
+
+                "Airtel_249": { streaming: "No", backup: "No", security: "No" },
+                "Airtel_499": { streaming: "Yes", backup: "No", security: "Yes" },
+                "Airtel_799": { streaming: "Yes", backup: "Yes", security: "Yes" },
+
+                "VI_299": { streaming: "No", backup: "No", security: "No" },
+                "VI_479": { streaming: "Yes", backup: "No", security: "No" },
+                "VI_699": { streaming: "Yes", backup: "Yes", security: "Yes" },
+
+                "BSNL_199": { streaming: "No", backup: "No", security: "No" },
+                "BSNL_399": { streaming: "No", backup: "Yes", security: "No" },
+                "BSNL_599": { streaming: "Yes", backup: "Yes", security: "Yes" }
+            };
+
+            const features = telecomPlans[planKey] || { streaming: "No", backup: "No", security: "No" };
+            // ADD DEBUG LOG AS REQUESTED
+            console.log("Selected Plan Data:", { monthly: price, ...features });
+            
+            const streamField = document.querySelector('select[name="StreamingTV"]');
+            const backupField = document.querySelector('select[name="OnlineBackup"]');
+            const securityField = document.querySelector('select[name="OnlineSecurity"]');
+            
+            streamField.value = features.streaming;
+            backupField.value = features.backup;
+            securityField.value = features.security;
+
+            // Highlight auto-filled fields and disable interaction
+            [streamField, backupField, securityField].forEach(f => {
+                f.style.background = '#f0fdf4';
+                f.style.borderColor = '#22c55e';
+                f.style.pointerEvents = 'none';
+            });
+            
+            // Show auto-detect message
+            let autoMsg = document.getElementById('autoDetectMsg');
+            if(!autoMsg) {
+                autoMsg = document.createElement('div');
+                autoMsg.id = 'autoDetectMsg';
+                autoMsg.style.gridColumn = '1 / -1';
+                autoMsg.style.background = '#e0f2fe';
+                autoMsg.style.color = '#0284c7';
+                autoMsg.style.padding = '12px 15px';
+                autoMsg.style.borderRadius = '12px';
+                autoMsg.style.fontWeight = 'bold';
+                autoMsg.style.fontSize = '14px';
+                autoMsg.style.textAlign = 'center';
+                autoMsg.style.marginTop = '15px';
+                
+                const banner = document.getElementById('calcBanner');
+                banner.parentNode.insertBefore(autoMsg, banner);
+            }
+            autoMsg.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Features auto-detected securely from selected plan (' + currentProvider + ' ' + price + ')';
+            autoMsg.style.display = 'block';
+            
+            // Update UI Calculation Text
+            calcBanner.style.display = "flex";
+            const t_val = document.getElementById('tenureInput').value || 1;
+            calcText.innerText = "₹" + price + " × " + t_val + " Months";
+            calcTotal.innerText = "Total: ₹" + total.toFixed(0);
+            
+            triggerLiveSimulation();
+            
+            // Live Prediction Compare 
+            {% if output %}
+            const compareBanner = document.getElementById('compareBanner');
+            if (compareBanner) {
+                compareBanner.style.display = 'block';
+                document.getElementById('newRiskValue').innerText = 'Loading...';
+                document.getElementById('newRiskValue').style.color = '#cbd5e1';
+                
+                // Construct JSON payload from the form inputs + updated plan inputs
+                const formData = new FormData(document.getElementById('predictForm'));
+                const jsonData = Object.fromEntries(formData.entries());
+                
+                // Ensure correct types and updated plan values bypass form state if it just changed
+                jsonData['MonthlyCharges'] = price;
+                jsonData['TotalCharges'] = total;
+                jsonData['InternetService'] = this.dataset.internet;
+                jsonData['Contract'] = this.dataset.contract;
+                jsonData['StreamingTV'] = features.streaming;
+                jsonData['OnlineBackup'] = features.backup;
+                jsonData['OnlineSecurity'] = features.security;
+                
+                fetch('{% url "live_prediction" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(jsonData)
+                }).then(res => res.json())
+                .then(data => {
+                    if (data.probability) {
+                        const newRisk = data.probability;
+                        const currentRisk = parseFloat("{{ probability }}");
+                        const newElement = document.getElementById('newRiskValue');
+                        newElement.innerText = newRisk + "%";
+                        
+                        if (newRisk < currentRisk) {
+                            newElement.style.color = '#22c55e'; // green if improved
+                        } else if (newRisk > currentRisk) {
+                            newElement.style.color = '#ef4444'; // red if worse
+                        } else {
+                            newElement.style.color = 'white'; // white if same
+                        }
+                    }
+                }).catch(err => { console.error('Live predict failed', err); });
+            }
+            {% endif %}
+
+            // Spark Effect
+            this.style.transform = "scale(0.96)";
+            setTimeout(() => this.style.transform = "translateY(-5px)", 100);
+        });
+    });
+
+    form.addEventListener('submit', function(event) {
+        if (!document.getElementById('monthlyCharges').value) {
+            alert("Please select a plan first!");
+            event.preventDefault();
+            return;
+        }
+        loadingOverlay.style.display = "flex";
+        const btn = document.querySelector('button[type="submit"].btn-predict');
+        if(btn) {
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Executing Prediction...';
+            btn.style.opacity = '0.9';
+            btn.style.pointerEvents = 'none';
+        }
+    });
+});
+
+function fillSample(type) {
+    if (type === 'churn') {
+        document.getElementById('phoneInput').value = '9876543210';
+        document.getElementById('phoneInput').dispatchEvent(new Event('input'));
+        document.getElementById('providerSelect').value = 'Jio';
+        document.getElementById('providerSelect').dispatchEvent(new Event('change'));
+        document.getElementById('gender').value = 'Female';
+        document.getElementById('SeniorCitizen').value = '1';
+        document.getElementById('contractSelect').value = 'Month-to-month';
+        document.getElementById('OnlineSecurity').value = 'No';
+        document.getElementById('TechSupport').value = 'No';
+        // Simulate clicking the first jio plan
+        document.querySelector('.jio-plan').click();
+    } else {
+        document.getElementById('phoneInput').value = '7123456789';
+        document.getElementById('phoneInput').dispatchEvent(new Event('input'));
+        document.getElementById('providerSelect').value = 'Airtel';
+        document.getElementById('providerSelect').dispatchEvent(new Event('change'));
+        document.getElementById('gender').value = 'Male';
+        document.getElementById('SeniorCitizen').value = '0';
+        document.getElementById('contractSelect').value = 'Two year';
+        document.getElementById('OnlineSecurity').value = 'Yes';
+        document.getElementById('TechSupport').value = 'Yes';
+        // Click premium airtel plan
+        document.querySelectorAll('.airtel-plan')[2].click();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'users/UserHome.html' %}
+{% block content %}
+<style>
+    .data-card { background: white; border-radius: 24px; padding: 30px; box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,0.05); }
+    .grid-section { margin-top: 30px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+    th { text-align: left; background: var(--primary-bg); color: var(--text-muted); padding: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    td { border-bottom: 1px solid var(--primary-bg); padding: 15px; color: var(--text-main); }
+    tr:hover { background: var(--accent-light); transition: 0.2s; cursor: pointer; }
+    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 50px; font-weight: 700; font-size: 11px; }
+    .status-ready { background: #dcfce7; color: #16a34a; }
+</style>
+
+<div class="data-card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2>Data Preprocessing & Grid View</h2>
+            <p style="color: var(--text-muted); margin-top: 5px;">Raw customer behavioral data for EEP analysis.</p>
+        </div>
+        <div class="status-badge status-ready"><i class="fa-solid fa-circle-check"></i> Dataset Loaded</div>
+    </div>
+
+    <div class="grid-section">
+        {{ data|safe }}
+    </div>
+    
+    <div style="margin-top: 25px; text-align: center; border-top: 1px solid #f4f7fe; padding-top: 25px;">
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Ready for Evolving Ensemble Predictor (EEP) training?</p>
+        <a href="{% url 'training' %}" class="btn-dash" style="background: var(--accent); color: white; width: 300px; text-align: center; display: inline-block;">Proceed to Training <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const table = document.querySelector(".grid-section table");
+        if(table) {
+            table.classList.add("table", "table-hover");
+            table.style.width = "100%";
+        }
+    });
+</script>
+{% endblock %}

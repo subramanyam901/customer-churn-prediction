@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChurnPredict - Unified Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #3b82f6; --secondary: #8b5cf6; --bg: #0b1120; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { background-color: var(--bg); color: #f8fafc; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+        .auth-container { position: relative; width: 1000px; max-width: 95%; height: 680px; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; display: flex; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        
+        .side-panel { flex: 1; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; color: white; transition: 0.6s ease-in-out; }
+        .form-panel { flex: 1.2; padding: 50px; display: flex; flex-direction: column; justify-content: center; position: relative; }
+
+        .auth-form { position: absolute; width: 100%; top: 50%; transform: translateY(-50%); transition: 0.6s ease; padding-right: 100px; }
+        .login-form { left: 50px; opacity: 1; z-index: 2; }
+        .reg-form { left: 100%; opacity: 0; padding-right: 50px; z-index: 1; }
+
+        .show-reg .login-form { left: -100%; opacity: 0; z-index: 1; }
+        .show-reg .reg-form { left: 50px; opacity: 1; z-index: 2; }
+        .show-reg .side-panel { transform: translateX(120%); }
+        .show-reg .form-panel { transform: translateX(-83.3%); }
+
+        h2 { font-size: 32px; font-weight: 800; margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 12px; color: white; outline: none; font-size: 14px; }
+        .input-group input:focus { border-color: var(--primary); background: rgba(255,255,255,0.1); }
+        
+        .btn-auth { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; padding: 15px; border-radius: 12px; color: white; font-weight: 700; width: 100%; cursor: pointer; margin-top: 10px; font-size: 16px; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); }
+        .toggle-btn { background: rgba(255,255,255,0.1); border: 1px solid white; padding: 10px 30px; border-radius: 50px; color: white; cursor: pointer; font-weight: 600; margin-top: 20px; transition: 0.3s; }
+        .toggle-btn:hover { background: white; color: var(--primary); }
+        
+        .messages { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; text-align: center; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .success { background: rgba(34, 197, 94, 0.1); color: #22c55e; border-color: rgba(34, 197, 94, 0.2); }
+
+        .reg-scroll { height: 420px; overflow-y: auto; padding-right: 15px; margin-bottom: 20px; }
+        .reg-scroll::-webkit-scrollbar { width: 5px; }
+        .reg-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body id="body">
+    <div class="auth-container" id="authBox">
+        <div class="side-panel" id="sidePanel">
+            <h2 id="sideTitle">New to ChurnPredict?</h2>
+            <p id="sideDesc" style="opacity: 0.8; margin-top: 10px;">Join our high-performance EEP analytical suite today and start retaining your core customers.</p>
+            <button class="toggle-btn" id="toggleBtn" onclick="toggleAuth()">Create Account</button>
+        </div>
+        
+        <div class="form-panel" id="formPanel">
+            <div class="auth-form login-form" id="loginForm">
+                <h2>Welcome Back</h2>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="messages {% if message.tags == 'success' %}success{% endif %}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                <form action="{% url 'UserLoginCheck' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="input-group"><label>Login ID / Username</label><input type="text" name="loginname" required placeholder="example_user"></div>
+                    <div class="input-group"><label>Password</label><input type="password" name="pswd" required placeholder="••••••••"></div>
+                    <button type="submit" class="btn-auth">Sign In</button>
+                </form>
+            </div>
+
+            <div class="auth-form reg-form" id="regForm">
+                <h2>Join the Future</h2>
+                <p style="font-size: 13px; color: #94a3b8; margin-bottom: 20px;">Complete the registration to access EEP models.</p>
+                <form action="{% url 'UserRegisterActions' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="input-group"><label>Full Name</label>{{ form.name }}</div>
+                    <div class="input-group"><label>Login ID / Username</label>{{ form.loginid }}</div>
+                    <div class="input-group"><label>Email Address</label>{{ form.email }}</div>
+                    <div class="input-group"><label>Password</label>{{ form.password }}</div>
+                    <div class="input-group"><label>Confirm Password</label>{{ form.confirm_password }}</div>
+                    
+                    {% if form.errors %}
+                        <div class="messages">
+                            {% for field, errors in form.errors.items %}
+                                {{ errors|join:", " }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn-auth">Register Now</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAuth() {
+            const box = document.getElementById('authBox');
+            const sideTitle = document.getElementById('sideTitle');
+            const sideDesc = document.getElementById('sideDesc');
+            const toggleBtn = document.getElementById('toggleBtn');
+            
+            box.classList.toggle('show-reg');
+            
+            if (box.classList.contains('show-reg')) {
+                sideTitle.innerText = "Already a Member?";
+                sideDesc.innerText = "Log back into your specialized EEP dashboard and access your prediction models.";
+                toggleBtn.innerText = "Log In Instead";
+            } else {
+                sideTitle.innerText = "New to ChurnPredict?";
+                sideDesc.innerText = "Join our high-performance EEP analytical suite today and start retaining your core customers.";
+                toggleBtn.innerText = "Create Account";
+            }
+        }
+    </script>
+</body>
+</html>

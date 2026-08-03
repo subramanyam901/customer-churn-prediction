@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Login{% endblock %}
+{% block admin_login %}active{% endblock %}
+
+{% block content %}
+<style>
+    .login-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 2.5rem;
+        margin: 50px auto;
+        max-width: 500px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: transform 0.3s ease;
+        font-family: 'Open Sans', sans-serif;
+        color: rgb(30, 6, 71);
+    }
+    .login-card:hover {
+        transform: translateY(-5px);
+    }
+    .login-card h2 {
+        font-family: 'Alegreya Sans', sans-serif;
+        font-size: 2rem;
+        color: #fff;
+        text-shadow: 0 0 10px rgba(147, 197, 253, 0.5);
+        margin-bottom: 1.5rem;
+    }
+    .form-control {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #93c5fd;
+        box-shadow: 0 0 10px rgba(147, 197, 253, 0.5);
+        color: #fff;
+    }
+    .form-label {
+        color: #e0e0e0;
+        font-weight: 500;
+        font-size: 1rem;
+    }
+    .btn-primary {
+        background: linear-gradient(45deg, #2563eb, #93c5fd);
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #1e40af, #2563eb);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .btn-outline-dark {
+        color: #e0e0e0;
+        border-color: #e0e0e0;
+        border-radius: 50px;
+        padding: 0.75rem 2rem;
+        transition: all 0.3s ease;
+    }
+    .btn-outline-dark:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+    .text-primary {
+        color: #93c5fd !important;
+    }
+    @media (max-width: 768px) {
+        .login-card {
+            margin: 20px;
+            padding: 1.5rem;
+        }
+        .login-card h2 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+<div class="login-card">
+    <h2 class="text-center">Admin Login</h2>
+    <form action="{% url 'AdminLoginCheck' %}" method="POST" class="text-primary">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="loginid" class="form-label">Login ID</label>
+            <input type="text" class="form-control" id="loginid" name="loginid" required
+                   placeholder="Enter Login Id">
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="pswd" required
+                   placeholder="Enter Password">
+        </div>
+        <div class="d-flex justify-content-center gap-3 mb-3">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="reset" class="btn btn-primary">Reset</button>
+        </div>
+        {% if messages %}
+            {% for message in messages %}
+                <p class="text-center text-primary">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

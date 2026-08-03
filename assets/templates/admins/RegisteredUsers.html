@@ -1,0 +1,192 @@
+{% extends 'admins/adminbase.html' %}
+{% block title %}User Login Activity{% endblock %}
+{% block user_list %}active{% endblock %}
+
+{% block content %}
+<style>
+    .admin-table-container {
+        background: rgba(255, 255, 255, 0.05); /* glass effect */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); /* soft shadow */
+        border-radius: 12px;
+        padding: 25px;
+        margin-top: 20px;
+        overflow-x: auto;
+    }
+    
+    .admin-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+    .admin-table thead tr {
+        background: rgba(0, 0, 0, 0.4);
+        color: white; /* Headings: white */
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .admin-table th {
+        padding: 16px;
+        font-weight: 600;
+        text-align: left;
+    }
+    .admin-table th:first-child { border-radius: 8px 0 0 8px; }
+    .admin-table th:last-child { border-radius: 0 8px 8px 0; text-align: center; }
+
+    .user-table-row {
+        transition: all 0.3s ease;
+        vertical-align: middle;
+        background: rgba(255, 255, 255, 0.03); /* dark rows */
+    }
+    
+    .user-table-row:nth-child(odd) {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .user-table-row:nth-child(even) {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .user-table-row:hover {
+        background: rgba(255, 255, 255, 0.08); /* slightly brighter row */
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .user-table-row td {
+        padding: 16px;
+        color: #e2e8f0; /* Data: soft white */
+    }
+    .user-table-row td:first-child { border-radius: 8px 0 0 8px; }
+    .user-table-row td:last-child { border-radius: 0 8px 8px 0; text-align: right; }
+
+    .input-dark {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+    .input-dark::placeholder { color: #64748b; }
+    .input-dark:focus {
+        outline: none;
+        border-color: #38bdf8;
+        background: rgba(0, 0, 0, 0.3);
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-save:hover {
+        background: linear-gradient(135deg, #059669, #047857);
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.7); /* glow effect */
+        transform: translateY(-1px);
+    }
+
+    .btn-delete {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: 10px;
+    }
+    .btn-delete:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.7); /* glow effect */
+        transform: translateY(-1px);
+    }
+
+    .id-badge {
+        background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 12px;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    
+    .name-highlight {
+        font-weight: 600;
+        color: #f8fafc;
+        font-size: 14px;
+    }
+</style>
+
+<div class="card-admin" style="background: linear-gradient(135deg, #0f172a, #1e293b, #0a0f2c); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); padding: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div>
+            <h2 style="color: white; font-weight: 600;">User Login Activity</h2>
+            <p style="color: #cbd5e1; font-size: 14px; margin-top: 5px;">Track registrations and account activations</p>
+        </div>
+        <div style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 10px 18px; border-radius: 50px; font-size: 13px; font-weight: 600; border: 1px solid rgba(56, 189, 248, 0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            Total Registered: <span style="color: #f8fafc; margin-left: 5px; font-size: 14px;">{{ data|length }}</span>
+        </div>
+    </div>
+
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Login ID</th>
+                    <th>Full Name</th>
+                    <th>Email Address</th>
+                    <th style="text-align: center;">Account Management</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in data %}
+                <tr class="user-table-row">
+                    <td><span class="id-badge">{{ user.loginid }}</span></td>
+                    <td class="name-highlight">{{ user.name }}</td>
+                    <td style="color: #94a3b8; font-weight: 500;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fa fa-envelope" style="color: #64748b;"></i>
+                            {{ user.email }}
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <!-- Edit Form (Inline) -->
+                        <form action="{% url 'AdminUpdateUser' %}" method="POST" style="display: inline-flex; gap: 8px; align-items: center;">
+                            {% csrf_token %}
+                            <input type="hidden" name="uid" value="{{ user.id }}">
+                            <input type="text" name="name" value="{{ user.name }}" class="input-dark" style="width: 140px;" placeholder="Name">
+                            <input type="text" name="email" value="{{ user.email }}" class="input-dark" style="width: 180px;" placeholder="Email">
+                            <input type="password" name="password" placeholder="New Pass" class="input-dark" style="width: 110px;">
+                            <button type="submit" class="btn-save"><i class="fa fa-save"></i> Save</button>
+                        </form>
+                        <a href="{% url 'AdminDeleteUser' %}?uid={{ user.id }}" onclick="return confirm('Permanently remove this user?')" class="btn-delete"><i class="fa fa-trash"></i> Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

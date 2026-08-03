@@ -1,0 +1,81 @@
+{% extends 'admins/adminbase.html' %}
+{% block title %}System Overview Dashboard{% endblock %}
+{% block admin_home %}active{% endblock %}
+
+{% block content %}
+<div class="card-admin">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div>
+            <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 10px;">Internal Role Identification: {{ request.session.loggeduser }}</h1>
+            <p style="color: var(--text-muted); margin-bottom: 0px;">Full access to User Modules (Training/Prediction) and Administrative Control Panel.</p>
+        </div>
+        <div style="background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px;">
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success);"></div>
+            <span style="font-weight: 700; font-size: 14px; text-transform: uppercase;">Admin Mode Active</span>
+        </div>
+    </div>
+
+    <!-- User Module Integration (All User features in Admin Panel) -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px;">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4318ff, #8b5cf6); border: none; text-align: left; padding: 30px;">
+            <i class="fa fa-brain" style="font-size: 24px; margin-bottom: 15px;"></i>
+            <h3>EEP Training</h3>
+            <p style="font-size: 13px; opacity: 0.8; margin-top: 10px;">Review model comparison charts and weighted accuracy metrics.</p>
+            <a href="{% url 'training' %}" style="background: white; color: var(--accent); padding: 8px 16px; border-radius: 50px; text-decoration: none; font-weight: 700; margin-top: 15px; display: inline-block; font-size: 12px;">Launch Training</a>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #05cd99, #0bb08d); border: none; text-align: left; padding: 30px;">
+            <i class="fa fa-wand-magic-sparkles" style="font-size: 24px; margin-bottom: 15px;"></i>
+            <h3>Run Predictions</h3>
+            <p style="font-size: 13px; opacity: 0.8; margin-top: 10px;">Execute the Evolving Ensemble Predictor module on manual inputs.</p>
+            <a href="{% url 'prediction' %}" style="background: white; color: #0bb08d; padding: 8px 16px; border-radius: 50px; text-decoration: none; font-weight: 700; margin-top: 15px; display: inline-block; font-size: 12px;">Execute Module</a>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #ffce20, #ea580c); border: none; text-align: left; padding: 30px;">
+            <i class="fa fa-database" style="font-size: 24px; margin-bottom: 15px;"></i>
+            <h3>View Dataset</h3>
+            <p style="font-size: 13px; opacity: 0.8; margin-top: 10px;">Inspect the underlying customer behavioral data grid.</p>
+            <a href="{% url 'DatasetView' %}" style="background: white; color: #ea580c; padding: 8px 16px; border-radius: 50px; text-decoration: none; font-weight: 700; margin-top: 15px; display: inline-block; font-size: 12px;">View Grid</a>
+        </div>
+    </div>
+
+    <!-- Admin Management Section -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+        <div class="card-admin" style="background: rgba(255,255,255,0.02); border: none; padding: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h3 style="font-size: 18px;">Administrative User Management</h3>
+                <a href="{% url 'ViewRegisteredUsers' %}" style="color: var(--accent); font-size: 13px; text-decoration: none; font-weight: 600;">View Detailed List</a>
+            </div>
+            
+            <!-- Statistical Snapshot -->
+            <div style="display: flex; gap: 30px; margin-bottom: 30px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 20px;">
+                <div style="flex: 1; text-align: center;">
+                    <p style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Total Registrations</p>
+                    <p style="font-size: 32px; font-weight: 800; color: white;">{{ data|length }}</p>
+                </div>
+                <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                <div style="flex: 1; text-align: center;">
+                    <p style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Weighted Accuracy</p>
+                    <p style="font-size: 32px; font-weight: 800; color: var(--success);">94.9%</p>
+                </div>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">
+                Use the high-performance administrative panel to monitor new user registrations, track EEP performance metrics, and activate system access roles.
+            </p>
+            <a href="{% url 'generate_report' %}" style="background: var(--accent); color: white; width: 100%; padding: 12px; margin-top: 20px; text-decoration: none; text-align: center; display: block; border-radius: 12px; font-weight: 700; font-size: 14px; box-shadow: 0 10px 20px rgba(67, 24, 255, 0.2);">Download System Summary PDF</a>
+        </div>
+
+        <div class="card-admin" style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+            <i class="fa fa-user-gear" style="font-size: 50px; color: var(--accent); margin-bottom: 20px;"></i>
+            <h3>Manage System Access</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 10px; margin-bottom: 20px;">Review pending activations and assign user roles.</p>
+            <a href="{% url 'ViewRegisteredUsers' %}" class="btn-predict" style="padding: 12px 30px; text-decoration: none; font-size: 14px; width: auto; margin-top: 0;">Authorize Users</a>
+            
+            <hr style="border: 0; border-top: 1px dashed rgba(255,255,255,0.2); width: 80%; margin: 25px 0;">
+            <i class="fa fa-chart-pie" style="font-size: 30px; color: #10b981; margin-bottom: 10px;"></i>
+            <h3 style="font-size: 16px;">Activity Insights</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-top: 5px; margin-bottom: 15px;">Monitor AI predictions and actions.</p>
+            <a href="{% url 'AdminReport' %}" class="btn-predict" style="background: #10b981; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); padding: 12px 30px; text-decoration: none; font-size: 14px; width: auto; margin-top: 0;">Generate User Activity Report</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

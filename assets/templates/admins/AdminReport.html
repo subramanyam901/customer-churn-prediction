@@ -1,0 +1,122 @@
+{% extends 'admins/adminbase.html' %}
+{% block title %}User Activity Report{% endblock %}
+{% block content %}
+<div class="card-admin" style="animation: fadeIn 0.5s ease-out;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;">
+        <div>
+            <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 5px;"><i class="fa-solid fa-chart-pie" style="color: #10b981;"></i> User Activity Report</h1>
+            <p style="color: var(--text-muted); margin-bottom: 0px; font-size: 14px;">Comprehensive log of system inferences and individual plan risk assignments.</p>
+        </div>
+        <div>
+            <a href="{% url 'AdminDownloadReport' %}" class="btn-predict" style="background: #ef4444; color: white; border-radius: 12px; padding: 12px 25px; text-decoration: none; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);"><i class="fa-solid fa-download"></i> Download Report</a>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+        <input type="text" id="searchInput" placeholder="Search by Username or Phone..." style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px 20px; border-radius: 12px; width: 300px; outline: none; font-size: 14px;">
+    </div>
+
+    <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);">
+        <table class="table" id="activityTable" style="margin: 0; width: 100%; border-collapse: collapse; text-align: left; color: white; font-size: 14px;">
+            <thead>
+                <tr style="background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <th style="padding: 15px 20px; cursor: pointer; color: var(--text-muted); font-weight: 700;" onclick="sortTable(0)">Username <i class="fa fa-sort" style="font-size: 10px; margin-left: 5px;"></i></th>
+                    <th style="padding: 15px 20px; color: var(--text-muted); font-weight: 700;">Phone</th>
+                    <th style="padding: 15px 20px; cursor: pointer; color: var(--text-muted); font-weight: 700;" onclick="sortTable(2)">Plan <i class="fa fa-sort" style="font-size: 10px; margin-left: 5px;"></i></th>
+                    <th style="padding: 15px 20px; color: var(--text-muted); font-weight: 700;">Risk Score</th>
+                    <th style="padding: 15px 20px; cursor: pointer; color: var(--text-muted); font-weight: 700;" onclick="sortTable(4)">Result <i class="fa fa-sort" style="font-size: 10px; margin-left: 5px;"></i></th>
+                    <th style="padding: 15px 20px; cursor: pointer; color: var(--text-muted); font-weight: 700;" onclick="sortTable(5)">Date <i class="fa fa-sort" style="font-size: 10px; margin-left: 5px;"></i></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for act in activities %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.3s;">
+                    <td style="padding: 15px 20px; font-weight: 600;">{{ act.username }}</td>
+                    <td style="padding: 15px 20px; opacity: 0.8;">{{ act.phone }}</td>
+                    <td style="padding: 15px 20px;">
+                        <span style="background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; font-size: 12px;">{{ act.plan }}</span>
+                    </td>
+                    <td style="padding: 15px 20px; font-weight: 700;">{{ act.risk_score|floatformat:1 }}%</td>
+                    <td style="padding: 15px 20px;">
+                        {% if 'Churn' in act.prediction_result %}
+                        <span style="color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800;"><i class="fa fa-triangle-exclamation"></i> Churn</span>
+                        {% else %}
+                        <span style="color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800;"><i class="fa fa-shield-check"></i> Safe</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 15px 20px; color: var(--text-muted); font-size: 13px;">{{ act.timestamp|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">No user activity recorded yet. Run predictions to collect data.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById("searchInput").addEventListener("keyup", function() {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#activityTable tbody tr");
+        rows.forEach(row => {
+            if(row.cells.length > 1) {
+                let userText = row.cells[0].textContent.toLowerCase();
+                let phoneText = row.cells[1].textContent.toLowerCase();
+                if (userText.includes(filter) || phoneText.includes(filter)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            }
+        });
+    });
+
+    function sortTable(n) {
+        let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.getElementById("activityTable");
+        switching = true;
+        dir = "asc"; 
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                if (dir == "asc") {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == "desc") {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount ++;      
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+    }
+</script>
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    #activityTable tbody tr:hover {
+        background: rgba(255,255,255,0.05);
+    }
+</style>
+{% endblock %}
